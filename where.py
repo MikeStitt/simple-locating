@@ -266,6 +266,10 @@ class target:
 
 
 def estimate_pos_3_hrz_angles( left_target, right_target ):
+
+#
+# See https://github.com/MikeStitt/simple-locating-docs/blob/master/mathToFindLocationFromAnglesTo3PointsOnALine.pdf?raw=true
+#
 	ANGLE_0 = left_target.left_rad
 	ANGLE_1 = left_target.right_rad
 	ANGLE_2 = right_target.right_rad
