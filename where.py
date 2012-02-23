@@ -10,6 +10,9 @@ import scipy.linalg
 
 pi = math.pi
 
+debug_label = ''
+debug_found = ''
+
 def deg2rad( d ):
 	return 2.0 * pi * d / 360.0
 
@@ -36,6 +39,7 @@ MID_LEFT = 3
 MID_RIGHT = 4
 TOP = 5
 
+target_name = { UNKNOWN: 'UN', LOW: 'BT', MID_UNKNOWN: 'MU', MID_LEFT: 'ML', MID_RIGHT: 'MR', TOP: 'TP' } 
 
 # define a class to hold a table of where the targets are on the field
 #
@@ -161,7 +165,7 @@ cameraMatrix = np.array([ np.array([fl,      0, 160]),
 distCoeff = np.float64([0,0,0,0])
 
 def get_sides( ul, ll, ur, lr ):
-	# use ceil and floor to shorted boxes at partial pixels...
+	# use ceil and floor to shorten boxes at partial pixels...
 	#           left,                       right,                          top,                        bottom
 #	return [ min(ul[0],ll[0]), max(ur[0],lr[0]), max(ul[1],ur[1]), min(ll[1],lr[1]) ] 
 	return [ float(math.ceil(min(ul[0],ll[0]))), float(math.floor(max(ur[0],lr[0]))), float(math.floor(max(ul[1],ur[1]))), float(math.ceil(min(ll[1],lr[1]))) ] 
@@ -170,7 +174,7 @@ def construct_test_image( az_rot, pitch_rot, pos_x, pos_y, pos_z ):
 	projected = {}
 	rectangles = []
 	y_axis = np.array([0,1,0])
-	az_rot_matrix = rotation_matrix(y_axis,-az_rot)
+	az_rot_matrix = rotation_matrix(y_axis,az_rot)
 	x_axis = np.array([1,0,0])
 	el_rot_matrix = rotation_matrix(x_axis,pitch_rot)
 
@@ -178,6 +182,7 @@ def construct_test_image( az_rot, pitch_rot, pos_x, pos_y, pos_z ):
 	
 	for k, a in test_locs.iteritems():
 		p = cv2.projectPoints(np.array([a + [-pos_x,-pos_y,-pos_z]]), sum_rot_matrix, np.float64([0,0,0]), cameraMatrix, distCoeff)[0][0][0]
+#		print debug_label, k, 'x=', p[0], 'y=', p[1]
 		if ( 0 <= p[0] < 319 ) and ( 0 <= p[1] < 239 ):
 			projected[k] = p
 
@@ -266,7 +271,6 @@ class target:
 
 
 def estimate_pos_3_hrz_angles( left_target, right_target ):
-
 #
 # See https://github.com/MikeStitt/simple-locating-docs/blob/master/mathToFindLocationFromAnglesTo3PointsOnALine.pdf?raw=true
 #
@@ -298,9 +302,17 @@ def estimate_pos_3_hrz_angles( left_target, right_target ):
 #	print 'd=%f' % (d)
 
 #              az       east (+)                                  south +
-	return (right_target.right_rad+ak-pi, target_locs[right_target.pos].right_inches+k,    d )
+	return (-(right_target.right_rad+ak-pi), target_locs[right_target.pos].right_inches+k,    d )
+
+def found( i ):
+	if i == -1 :
+		return '-----'
+	else:
+		return 'FOUND'
 
 def where( rectangles ):
+	global debug_found
+
 	min_azimuth = +pi   # start at +180 which is out of view to right
 	max_azimuth = -pi   # start at -180 which is out of view to left
 
@@ -311,7 +323,7 @@ def where( rectangles ):
 
 	for r in rectangles:
 		r.classify_pos( min_azimuth, max_azimuth )
-		print 'rectangle pos =', r.pos, 'd=', r.dist_est_1, 'h=', r.height_est_1
+		#print debug_label, ' rectangle pos =', r.pos, 'd=', r.dist_est_1, 'h=', r.height_est_1
  
 	ml = -1
 	mr = -1
@@ -333,6 +345,8 @@ def where( rectangles ):
 			tp = index
 		else:
 			unknown = index # should not get here
+
+	debug_found = 'ml:{0:s} bt={1:s} tp={2:s} mr={3:s} mu={4:s}'.format( found(ml), found(bt), found(tp), found(mr), found(mu) )
 
 	left = -1
 	right = -1
@@ -368,22 +382,40 @@ def where( rectangles ):
 
 	return (az, east, south)
 
+def target_backboard_az_and_az_offset( target, east, south ):
+	target_east = target_locs[target.pos].center_east
+	target_south = -15.0
+
+	backboard_center_az = math.atan2(target_east-east,-south)
+	target_center_az = math.atan2(target_east-east,target_south-south)
+
+	az_offset = target_center_az - backboard_center_az
+
+	return backboard_center_az, az_offset
+
+
 def test_cases():
+	global debug_label
 #	for az in range (-30,+30):
-	for az in range (-10,+10,2):
-		for x in range (-36, +36, 6):
-			for south in range (60, 120, 6):
-				east = x+0.5
-				print ':::::::::::::::::::::: az=%f east=%f south=%f' % (az, east, south)
+	for south in range (60, 121, 6):
+		for x in range (-50, +51, 10):
+			for az in range (-20,+21,1):
+				east = x
+				debug_label = 'az={0:6.1f} east={1:6.1f} south={2:6.1f}'.format(az, east, south) 
+#				print debug_label
 #                             Rotate Right, Tilt Up, Shift Right, Shift Up, Shift Forward
-				constructed_rectangles = construct_test_image( math.radians(az), 0, east, 54.0, -south  )
+				constructed_rectangles = construct_test_image( math.radians(float(az)), 0.0, float(east), 54.0, float(-south)  )
 				targets = []				   
 				for r in constructed_rectangles:
 					targets.append( target( r[0], r[1], r[2], r[3] ) )
 				calc_az, calc_east, calc_south = where( targets )
 
 				if calc_south != -1000 :
-					print ':::::.az=%f east=%f south=%f az-err=%f  east-err=%f south-err=%f' % (az, east, south, az-math.degrees(calc_az), calc_east-east, calc_south - south )
+					print '{0:s} {1:s} az-err={2:6.1f} east-err={3:6.1f} south-err={4:6.1f}'.format(debug_label, debug_found, az-math.degrees(calc_az), calc_east-east, calc_south - south )
+					for r in targets:
+						actual_target_az, az_offset    = target_backboard_az_and_az_offset( r, east, south )
+						calc_target_az, calc_az_offset = target_backboard_az_and_az_offset( r, calc_east, calc_south )
+						print '{0:s} {1:s} az-err={2:6.1f}'.format(debug_label, target_name[r.pos], math.degrees(calc_az_offset-az_offset) )
 
 
 test_cases()
