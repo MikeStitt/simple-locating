@@ -109,7 +109,7 @@ def test_cases():
 		for east in range (-60, +61, 10):
 			for t in (where.MID_LEFT, where.LOW, where.MID_RIGHT):
 				az = math.degrees(math.atan2( where.target_locs[t].center_east-east, south+15.0 ))
-				debug_label = 'az={0:6.1f} e={1:6.1f} s={2:6.1f}'.format(az, east, south) 
+				debug_label = 'az={0:6.1f}(deg) e={1:6.1f}(in) s={2:6.1f}(in)'.format(az, east, south) 
 				#
 				# Project the image on to the camera, identify the complete targets in the field of view
 				constructed_rectangles = construct_test_image( math.radians(float(az)), # Rotate Right
@@ -133,7 +133,7 @@ def test_cases():
 				#
 				# if we found at least 2 targets in the camera field of view
 				if calc_south != -1000 :
-					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f}'.format(
+					debug_pos_err = 'heading-err={0:6.1f}(deg) east-err={1:6.1f}(in) south-err={2:6.1f}(in)'.format(
 						az-math.degrees(calc_az), calc_east-east, calc_south - south)
 					#
 					# Find the target we were aiming at in this test case
@@ -166,7 +166,7 @@ def test_cases():
 						   rms_clc_a_err = rms_clc_a_err + math.pow( calc_az_offset-az_offset,2 )
 						   rms_clc_r_err = rms_clc_a_err + math.pow( calc_target_range-actual_target_range,2 )
 
-						   print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(
+						   print '{0:s} {1:s} in-view:{2:s} target:{3:s} az-err-to-hoop={4:4.1f}(deg) range-err-to-hoop={5:4.1f}(in)'.format(
 							debug_label, debug_pos_err, where.debug_found, target_name[r.pos], 
 							math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range)
 				else:
