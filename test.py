@@ -166,7 +166,7 @@ def test_cases():
 						   rms_clc_a_err = rms_clc_a_err + math.pow( calc_az_offset-az_offset,2 )
 						   rms_clc_r_err = rms_clc_a_err + math.pow( calc_target_range-actual_target_range,2 )
 
-						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(
+						   print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(
 							debug_label, debug_pos_err, where.debug_found, target_name[r.pos], 
 							math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range)
 				else:
