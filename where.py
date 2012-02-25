@@ -271,21 +271,15 @@ class target:
 			self.pos = self.level
 
 
-def estimate_pos_3_hrz_angles( left_target, right_target ):
+def estimate_pos_3_sep_hrz_angles( left_rad, mid_rad, right_rad, left_pos, mid_pos, right_pos ):
 #
 # See https://github.com/MikeStitt/simple-locating-docs/blob/master/mathToFindLocationFromAnglesTo3PointsOnALine.pdf?raw=true
 #
-	ANGLE_0 = left_target.left_rad
-	ANGLE_1 = left_target.right_rad
-	ANGLE_2 = right_target.right_rad
+	a0 = mid_rad - left_rad
+	a1 = right_rad - mid_rad
 
-	a0 = ANGLE_1 - ANGLE_0
-	a1 = ANGLE_2 - ANGLE_1
-
-	b0 = target_locs[left_target.pos].right_inches - target_locs[left_target.pos].left_inches
-	b1 = target_locs[right_target.pos].right_inches - target_locs[left_target.pos].right_inches
-
-#	print 'a0=%f a1=%f b0=%f b1=%f' % (math.degrees(a0), math.degrees(a1), b0, b1)
+	b0 = mid_pos - left_pos
+	b1 = right_pos - mid_pos
 
  	A = math.atan2( -b0 , ( (b1/math.tan(a1)) - (b1+b0)/math.tan(a1+a0)))
 
@@ -298,12 +292,7 @@ def estimate_pos_3_hrz_angles( left_target, right_target ):
 
 	d = k * math.tan(alpha_k)
 
-#	print 'k=%f' % (k)
-
-#	print 'd=%f' % (d)
-
-#              az       east (+)                                  south +
-	return (-(right_target.right_rad+ak-pi), target_locs[right_target.pos].right_inches+k,    d )
+	return (-(right_rad+ak-pi), right_pos+k,    d )
 
 def found( fnd, target ):
 	if fnd == -1 :
@@ -311,7 +300,10 @@ def found( fnd, target ):
 	else:
 		return target_name[target]
 
-def where( rectangles ):
+def get_rad( x ):
+	return x[0]
+
+def where( rectangles, method ):
 	global debug_found
 
 	min_azimuth = +pi   # start at +180 which is out of view to right
@@ -333,23 +325,36 @@ def where( rectangles ):
 	mu = -1
 	unknown = 0
 	qty_found = 0
+	v_lines = []
 
 	for index,r in enumerate(rectangles):
 		if r.pos == LOW:
 			qty_found=qty_found+1
 			bt = index
+			# only add bottom if top is not found
+			if ( tp == -1 ):
+				v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
+				v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
 		elif r.pos == MID_UNKNOWN:
 			qty_found=qty_found+1
 			mu = index
 		elif r.pos == MID_LEFT:
 			qty_found=qty_found+1
 			ml = index
+			v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
+			v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
 		elif r.pos == MID_RIGHT:
 			qty_found=qty_found+1
 			mr = index
+			v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
+			v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
 		elif r.pos == TOP:
 			qty_found=qty_found+1
 			tp = index
+			# only add top if bottom is not found
+			if ( bt == -1 ):
+				v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
+				v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
 		else:
 			unknown = index # should not get here
 
@@ -384,10 +389,43 @@ def where( rectangles ):
 	south = -1000
 
 	if (left != -1) and (left != right):  
-		az, east, south = estimate_pos_3_hrz_angles( rectangles[left], rectangles[right] )
+		#az, east, south = estimate_pos_3_hrz_angles( rectangles[left], rectangles[right] )
 		#print 'ak=%f east=%f south=%f' % (math.degrees(az), east, south)
+		az, east, south = estimate_pos_3_sep_hrz_angles( rectangles[left].left_rad,
+								 rectangles[left].right_rad,
+								 rectangles[right].right_rad,
+								 target_locs[rectangles[left].pos].left_inches,
+								 target_locs[rectangles[left].pos].right_inches,
+								 target_locs[rectangles[right].pos].right_inches)
 
-	return (az, east, south)
+		#print 'A1={0:6.1f} A2={1:6.1f} A3={2:6.1f} a={3:6.1f} e={4:6.1f} s={5:6.1f}'.format(math.degrees(rectangles[left].left_rad), math.degrees(rectangles[left].right_rad), math.degrees(rectangles[right].right_rad), math.degrees(az),east,south)
+	v_lines_sorted = sorted( v_lines, key=get_rad )
+
+	a_sum = 0
+	e_sum = 0
+	s_sum = 0
+	qty = 0
+	if qty_found > 1:
+		left = 0
+		right = len(v_lines_sorted)-1
+		for mid in range(left+1,right):
+						a, e, s = estimate_pos_3_sep_hrz_angles( v_lines_sorted[left][0],
+										 v_lines_sorted[mid][0],
+										 v_lines_sorted[right][0],
+										 v_lines_sorted[left][1],
+										 v_lines_sorted[mid][1],
+										 v_lines_sorted[right][1] )
+						#print 'a1={0:6.1f} a2={1:6.1f} a3={2:6.1f} a={3:6.1f} e={4:6.1f} s={5:6.1f}'.format(math.degrees(v_lines_sorted[left][0]), math.degrees(v_lines_sorted[mid][0]), math.degrees(v_lines_sorted[right][0]), math.degrees(a),e,s)
+						a_sum = a_sum + a
+						e_sum = e_sum + e
+						s_sum = s_sum + s
+						qty = qty + 1
+
+		if method==1:
+			az = a_sum/qty
+			east = e_sum/qty
+			south = s_sum/qty
+	return( az, east, south )
 
 def target_backboard_az_and_az_offset( target, east, south ):
 	target_east = target_locs[target.pos].center_east
@@ -421,16 +459,24 @@ def test_cases():
 				targets = []				   
 				for r in constructed_rectangles:
 					targets.append( target( r[0], r[1], r[2], r[3] ) )
-				calc_az, calc_east, calc_south = where( targets )
+				calc_az, calc_east, calc_south = where( targets, 0 )
+
+				avg_az, avg_east, avg_south = where( targets, 1 )
 
 				if calc_south != -1000 :
-					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f}'.format(az-math.degrees(calc_az), calc_east-east, calc_south - south )
+					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f} az-avg={3:6.1f} e-avg={4:6.1f} s-avg={5:6.1f}'.format(az-math.degrees(calc_az), calc_east-east, calc_south - south, az-math.degrees(avg_az), avg_east-east, avg_south-south )
 					for r in targets:
 						actual_target_az, az_offset    = target_backboard_az_and_az_offset( r, east, south )
 						calc_target_az, calc_az_offset = target_backboard_az_and_az_offset( r, calc_east, calc_south )
+						avg_target_az, avg_az_offset = target_backboard_az_and_az_offset( r, avg_east, avg_south )
 						actual_target_range = target_range( r, east, south)
 						calc_target_range = target_range( r, calc_east, calc_south )
-						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(debug_label, debug_pos_err, debug_found, target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range )
+						avg_target_range = target_range( r, avg_east, avg_south )
+						if math.fabs(calc_target_range-actual_target_range) >= math.fabs(avg_target_range-actual_target_range):
+							better = '+'
+						else:
+							better = '.'
+						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f} az-avg-err={6:6.1f} r-avg-err={7:6.1f} {8:1s}'.format(debug_label, debug_pos_err, debug_found, target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range, math.degrees(avg_az_offset-az_offset), avg_target_range - actual_target_range, better )
 				else:
 					debug_pos_err = '---------------------------------------'
 
