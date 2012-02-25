@@ -33,12 +33,15 @@ camera_initial_pitch_error = 0.0  # radians, + is pitched up
 target_width = 24
 target_height = 18
 
-UNKNOWN = 0
+#
+# Order the constants so that left is least, low and top are in the middle, and right is highest
+#
+MID_LEFT = 0
 LOW = 1
-MID_UNKNOWN = 2
-MID_LEFT = 3
-MID_RIGHT = 4
-TOP = 5
+UNKNOWN = 2
+MID_UNKNOWN = 3
+TOP = 4
+MID_RIGHT = 5
 
 target_name = { UNKNOWN: 'UN', LOW: 'BT', MID_UNKNOWN: 'MU', MID_LEFT: 'ML', MID_RIGHT: 'MR', TOP: 'TP' } 
 
@@ -294,15 +297,6 @@ def estimate_pos_3_sep_hrz_angles( left_rad, mid_rad, right_rad, left_pos, mid_p
 
 	return (-(right_rad+ak-pi), right_pos+k,    d )
 
-def found( fnd, target ):
-	if fnd == -1 :
-		return '--'
-	else:
-		return target_name[target]
-
-def get_rad( x ):
-	return x[0]
-
 def where( rectangles, method ):
 	global debug_found
 
@@ -316,116 +310,56 @@ def where( rectangles, method ):
 
 	for r in rectangles:
 		r.classify_pos( min_azimuth, max_azimuth )
-		#print debug_label, ' rectangle pos =', r.pos, 'd=', r.dist_est_1, 'h=', r.height_est_1
  
-	ml = -1
-	mr = -1
-	bt = -1
-	tp = -1
-	mu = -1
-	unknown = 0
-	qty_found = 0
-	v_lines = []
+	ml = '--'
+	mr = '--'
+	bt = '--'
+	tp = '--'
+	mu = '--'
+	leftmost = MID_RIGHT+1
+	rightmost = MID_LEFT-1
 
 	for index,r in enumerate(rectangles):
 		if r.pos == LOW:
-			qty_found=qty_found+1
-			bt = index
-			# only add bottom if top is not found
-			if ( tp == -1 ):
-				v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
-				v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
+			bt = 'BT'
 		elif r.pos == MID_UNKNOWN:
-			qty_found=qty_found+1
-			mu = index
+			mu = 'MU'
 		elif r.pos == MID_LEFT:
-			qty_found=qty_found+1
-			ml = index
-			v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
-			v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
+			ml = 'ML'
 		elif r.pos == MID_RIGHT:
-			qty_found=qty_found+1
-			mr = index
-			v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
-			v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
+			mr = 'MR'
 		elif r.pos == TOP:
-			qty_found=qty_found+1
-			tp = index
-			# only add top if bottom is not found
-			if ( bt == -1 ):
-				v_lines.append( (r.left_rad,  target_locs[r.pos].left_inches) )
-				v_lines.append( (r.right_rad, target_locs[r.pos].right_inches) )
-		else:
-			unknown = index # should not get here
+			tp = 'TP'
 
-	debug_found = '{0:1d}:{1:s}{2:s}{3:s}{4:s}{5:s}'.format( qty_found, found(ml,MID_LEFT), found(bt,LOW), found(tp,TOP), found(mr,MID_RIGHT), found(mu,MID_UNKNOWN) )
+		if r.pos < leftmost :
+			leftmost = r.pos
+			left = r
 
-	left = -1
-	right = -1
-	if ml != -1:
-		left = ml
-	elif bt != -1:
-		left = bt
-	elif tp != -1:
-		left = tp
-	elif mr != -1:
-		left = mr  # should not get here
-	elif mu != -1:
-		left = mu 
+		if r.pos > rightmost :
+			rightmost = r.pos
+			right=r
 
-	if mr != -1:
-		right = mr
-	elif bt != -1:
-		right = bt  # note opposite path from left so we don't use top and bottom as left and right together
-	elif tp != -1:
-		right = tp
-	elif ml != -1:
-		right = ml # should not get here
-	elif mu != -1:
-		right = mu
+	debug_found = '{0:s}{1:s}{2:s}{3:s}{4:s}'.format( ml, bt, tp, mr, mu )
+	#print '{0:s} {1:d} {2:d}'.format(debug_found,leftmost, rightmost)
 
-	az = -1000*pi
-	east = -1000
-	south = -1000
+	if (leftmost != MID_RIGHT+1) and (leftmost != rightmost) and not((leftmost==LOW) and (rightmost==TOP)) :
+		# take two estimates of position with 3 angles
+		az1, east1, south1 = estimate_pos_3_sep_hrz_angles( left.left_rad,
+								    left.right_rad,
+								    right.right_rad,
+								 target_locs[leftmost].left_inches,
+								 target_locs[leftmost].right_inches,
+								 target_locs[rightmost].right_inches)
 
-	if (left != -1) and (left != right):  
-		#az, east, south = estimate_pos_3_hrz_angles( rectangles[left], rectangles[right] )
-		#print 'ak=%f east=%f south=%f' % (math.degrees(az), east, south)
-		az, east, south = estimate_pos_3_sep_hrz_angles( rectangles[left].left_rad,
-								 rectangles[left].right_rad,
-								 rectangles[right].right_rad,
-								 target_locs[rectangles[left].pos].left_inches,
-								 target_locs[rectangles[left].pos].right_inches,
-								 target_locs[rectangles[right].pos].right_inches)
-
-
-	v_lines_sorted = sorted( v_lines, key=get_rad )
-
-	a_sum = 0
-	e_sum = 0
-	s_sum = 0
-	qty = 0
-	if qty_found > 1:
-		left = 0
-		right = len(v_lines_sorted)-1
-		for mid in (left+1,right-1):
-						a, e, s = estimate_pos_3_sep_hrz_angles( v_lines_sorted[left][0],
-										 v_lines_sorted[mid][0],
-										 v_lines_sorted[right][0],
-										 v_lines_sorted[left][1],
-										 v_lines_sorted[mid][1],
-										 v_lines_sorted[right][1] )
-
-						a_sum = a_sum + a
-						e_sum = e_sum + e
-						s_sum = s_sum + s
-						qty = qty + 1
-
-		if method==1:
-			az = a_sum/qty
-			east = e_sum/qty
-			south = s_sum/qty
-	return( az, east, south )
+		az2, east2, south2 = estimate_pos_3_sep_hrz_angles( left.left_rad,
+								    right.left_rad,
+								    right.right_rad,
+								 target_locs[leftmost].left_inches,
+								 target_locs[rightmost].left_inches,
+								 target_locs[rightmost].right_inches)
+		return ( (az1+az2)/2.0, (east1+east2)/2.0, (south1+south2)/2.0 )
+	else:
+		return( -1000*pi, -1000, -1000 )
 
 def target_backboard_az_and_az_offset( target, east, south ):
 	target_east = target_locs[target.pos].center_east
