@@ -398,7 +398,7 @@ def where( rectangles, method ):
 								 target_locs[rectangles[left].pos].right_inches,
 								 target_locs[rectangles[right].pos].right_inches)
 
-		#print 'A1={0:6.1f} A2={1:6.1f} A3={2:6.1f} a={3:6.1f} e={4:6.1f} s={5:6.1f}'.format(math.degrees(rectangles[left].left_rad), math.degrees(rectangles[left].right_rad), math.degrees(rectangles[right].right_rad), math.degrees(az),east,south)
+
 	v_lines_sorted = sorted( v_lines, key=get_rad )
 
 	a_sum = 0
@@ -408,14 +408,14 @@ def where( rectangles, method ):
 	if qty_found > 1:
 		left = 0
 		right = len(v_lines_sorted)-1
-		for mid in range(left+1,right):
+		for mid in (left+1,right-1):
 						a, e, s = estimate_pos_3_sep_hrz_angles( v_lines_sorted[left][0],
 										 v_lines_sorted[mid][0],
 										 v_lines_sorted[right][0],
 										 v_lines_sorted[left][1],
 										 v_lines_sorted[mid][1],
 										 v_lines_sorted[right][1] )
-						#print 'a1={0:6.1f} a2={1:6.1f} a3={2:6.1f} a={3:6.1f} e={4:6.1f} s={5:6.1f}'.format(math.degrees(v_lines_sorted[left][0]), math.degrees(v_lines_sorted[mid][0]), math.degrees(v_lines_sorted[right][0]), math.degrees(a),e,s)
+
 						a_sum = a_sum + a
 						e_sum = e_sum + e
 						s_sum = s_sum + s
@@ -447,11 +447,18 @@ def target_range( target, east, south ):
 def test_cases():
 	global debug_label
 	global debug_pos_err
-#	for az in range (-30,+30):
-	for south in range (60, 121, 6):
-		for x in range (-50, +51, 10):
-			for az in range (-20,+21,1):
+
+	rms_avg_a_err = 0.0
+	rms_avg_r_err = 0.0
+	rms_clc_a_err = 0.0
+	rms_clc_r_err = 0.0
+	cnt = 0
+
+	for south in range (60, 241, 10):
+		for x in range (-60, +61, 10):
+			for t in (MID_LEFT, LOW, MID_RIGHT):
 				east = x
+				az = math.degrees(math.atan2( target_locs[t].center_east-east, south+15.0 ))
 				debug_label = 'az={0:6.1f} e={1:6.1f} s={2:6.1f}'.format(az, east, south) 
 #				print debug_label
 #                             Rotate Right, Tilt Up, Shift Right, Shift Up, Shift Forward
@@ -466,12 +473,19 @@ def test_cases():
 				if calc_south != -1000 :
 					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f} az-avg={3:6.1f} e-avg={4:6.1f} s-avg={5:6.1f}'.format(az-math.degrees(calc_az), calc_east-east, calc_south - south, az-math.degrees(avg_az), avg_east-east, avg_south-south )
 					for r in targets:
+                                           if r.pos == t :
 						actual_target_az, az_offset    = target_backboard_az_and_az_offset( r, east, south )
 						calc_target_az, calc_az_offset = target_backboard_az_and_az_offset( r, calc_east, calc_south )
 						avg_target_az, avg_az_offset = target_backboard_az_and_az_offset( r, avg_east, avg_south )
 						actual_target_range = target_range( r, east, south)
 						calc_target_range = target_range( r, calc_east, calc_south )
 						avg_target_range = target_range( r, avg_east, avg_south )
+						cnt = cnt + 1
+						rms_clc_a_err = rms_clc_a_err + math.pow( calc_az_offset-az_offset,2 )
+						rms_clc_r_err = rms_clc_a_err + math.pow( calc_target_range-actual_target_range,2 )
+						rms_avg_a_err = rms_clc_a_err + math.pow( avg_az_offset-az_offset,2 )
+						rms_avg_r_err = rms_clc_a_err + math.pow( avg_target_range-actual_target_range,2 )
+
 						if math.fabs(calc_target_range-actual_target_range) >= math.fabs(avg_target_range-actual_target_range):
 							better = '+'
 						else:
@@ -479,6 +493,6 @@ def test_cases():
 						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f} az-avg-err={6:6.1f} r-avg-err={7:6.1f} {8:1s}'.format(debug_label, debug_pos_err, debug_found, target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range, math.degrees(avg_az_offset-az_offset), avg_target_range - actual_target_range, better )
 				else:
 					debug_pos_err = '---------------------------------------'
-
+	print 'rms_clc_r_err={0:10.7f} rms_avg_r_err={1:10.7f} rms_clc_a_err={2:10.7f} rms_avg_a_err={3:10.7f}'.format( math.sqrt(rms_clc_r_err/cnt), math.sqrt(rms_avg_r_err/cnt), math.degrees(math.sqrt(rms_clc_a_err/cnt)), math.degrees(math.sqrt(rms_avg_a_err/cnt)) )
 
 test_cases()
