@@ -106,36 +106,78 @@ def test_cases():
 	cnt = 0
 
 	for south in range (60, 241, 10):
-		for x in range (-60, +61, 10):
+		for east in range (-60, +61, 10):
 			for t in (where.MID_LEFT, where.LOW, where.MID_RIGHT):
-				east = x
 				az = math.degrees(math.atan2( where.target_locs[t].center_east-east, south+15.0 ))
 				debug_label = 'az={0:6.1f} e={1:6.1f} s={2:6.1f}'.format(az, east, south) 
-#                                                                              Rotate Right, Tilt Up, Shift Right, Shift Up, Shift Forward
-				constructed_rectangles = construct_test_image( math.radians(float(az)), 0.0, float(east), 54.0, float(-south)  )
-				targets = []				   
+				#
+				# Project the image on to the camera, identify the complete targets in the field of view
+				constructed_rectangles = construct_test_image( math.radians(float(az)), # Rotate Right
+									       0.0,                     # Tilt Up, 
+									       float(east),             # Shift Right, 
+									       54.0,                    # Shift Up, 
+									       float(-south)  )         # Shift Forward 
+				# Start with an empty list of targets
+				targets = []			
+				#
+				# Perform Step 1 on all the target rectangles in the field of view
+				#
 				for r in constructed_rectangles:
 					targets.append( where.target( r[0], r[1], r[2], r[3] ) )
+
+				# Perform Steps 2 through 12 on the target set of rectangles in the field of view
+				#
 				calc_az, calc_east, calc_south = where.where( targets )
 
+				# calc_south = -1000 if we did not find two targets in the field of view
+				#
+				# if we found at least 2 targets in the camera field of view
 				if calc_south != -1000 :
 					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f}'.format(
 						az-math.degrees(calc_az), calc_east-east, calc_south - south)
+					#
+					# Find the target we were aiming at in this test case
 					for r in targets:
                                            if r.pos == t :
-						actual_target_az, az_offset    = where.target_backboard_az_and_az_offset( r, east, south )
-						calc_target_az, calc_az_offset = where.target_backboard_az_and_az_offset( r, calc_east, calc_south )
-						actual_target_range            = where.target_range( r, east, south)
-						calc_target_range              = where.target_range( r, calc_east, calc_south )
-						cnt = cnt + 1
-						rms_clc_a_err = rms_clc_a_err + math.pow( calc_az_offset-az_offset,2 )
-						rms_clc_r_err = rms_clc_a_err + math.pow( calc_target_range-actual_target_range,2 )
+						   #
+						   # Perform step 13
+						   # Calculate the azimuth offset from the center of the backboard to the
+						   # center of the hoop
+						   calc_target_az, calc_az_offset = where.target_backboard_az_and_az_offset( 
+							   r, calc_east, calc_south )
+						   #
+						   # Perform step 14
+						   # Calculate the range from the camera to the center of the hoop
+						   calc_target_range              = where.target_range( r, calc_east, calc_south )
+
+						   #
+						   # Calculate the actual (ideal) azimuth offset and range assuming
+						   # that we had no errors calculating where we were at and calculating
+						   # our heading
+						   #
+						   actual_target_az, az_offset    = where.target_backboard_az_and_az_offset( 
+							   r, east, south )
+						   actual_target_range            = where.target_range( r, east, south)
+
+						   #
+						   # Accumulate Root Mean Square (RMS) Heading and Range for this test run
+						   #
+						   cnt = cnt + 1						   
+						   rms_clc_a_err = rms_clc_a_err + math.pow( calc_az_offset-az_offset,2 )
+						   rms_clc_r_err = rms_clc_a_err + math.pow( calc_target_range-actual_target_range,2 )
 
 						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(
 							debug_label, debug_pos_err, where.debug_found, target_name[r.pos], 
 							math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range)
 				else:
 					debug_pos_err = '---------------------------------------'
+
+	#
+	# Print the RMS errors
+	#
 	print 'rms_clc_r_err={0:10.7f} rms_clc_a_err={1:10.7f}'.format( math.sqrt(rms_clc_r_err/cnt), math.degrees(math.sqrt(rms_clc_a_err/cnt)) ) 
 
+#
+# Run the test cases
+#
 test_cases()
