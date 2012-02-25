@@ -14,10 +14,11 @@ pi = math.pi
 debug_label = ''
 debug_pos_err = ''
 
-#BEGIN:debug code to create a test image and a rotation...
+target_name = { where.UNKNOWN: 'UN', where.LOW: 'BT', where.MID_UNKNOWN: 'MU', where.MID_LEFT: 'ML', where.MID_RIGHT: 'MR', where.TOP: 'TP' } 
+
+
 #                                 x(+is E)    y(+ is Up) z(+ is N)
 test_locs = {
-
 	      'ml-ul' : np.array([-27.38-12.0,         61.0+20.0, 0]),
 	      'ml-ll' : np.array([-27.38-12.0,         61.0+ 2.0, 0]),
 	      'ml-ur' : np.array([-27.38+12.0,         61.0+20.0, 0]),
@@ -96,9 +97,6 @@ def construct_test_image( az_rot, pitch_rot, pos_x, pos_y, pos_z ):
 
 	return rectangles
 
-#END:debug code to create 
-
-
 def test_cases():
 	global debug_label
 	global debug_pos_err
@@ -115,15 +113,14 @@ def test_cases():
 				east = x
 				az = math.degrees(math.atan2( where.target_locs[t].center_east-east, south+15.0 ))
 				debug_label = 'az={0:6.1f} e={1:6.1f} s={2:6.1f}'.format(az, east, south) 
-#				print debug_label
-#                             Rotate Right, Tilt Up, Shift Right, Shift Up, Shift Forward
+#                                                                              Rotate Right, Tilt Up, Shift Right, Shift Up, Shift Forward
 				constructed_rectangles = construct_test_image( math.radians(float(az)), 0.0, float(east), 54.0, float(-south)  )
 				targets = []				   
 				for r in constructed_rectangles:
 					targets.append( where.target( r[0], r[1], r[2], r[3] ) )
-				calc_az, calc_east, calc_south = where.where( targets, 0 )
+				calc_az, calc_east, calc_south = where.where( targets )
 
-				avg_az, avg_east, avg_south = where.where( targets, 1 )
+				avg_az, avg_east, avg_south = where.where( targets )
 
 				if calc_south != -1000 :
 					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f} az-avg={3:6.1f} e-avg={4:6.1f} s-avg={5:6.1f}'.format(az-math.degrees(calc_az), calc_east-east, calc_south - south, az-math.degrees(avg_az), avg_east-east, avg_south-south )
@@ -145,7 +142,7 @@ def test_cases():
 							better = '+'
 						else:
 							better = '.'
-						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f} az-avg-err={6:6.1f} r-avg-err={7:6.1f} {8:1s}'.format(debug_label, debug_pos_err, where.debug_found, where.target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range, math.degrees(avg_az_offset-az_offset), avg_target_range - actual_target_range, better )
+						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f} az-avg-err={6:6.1f} r-avg-err={7:6.1f} {8:1s}'.format(debug_label, debug_pos_err, where.debug_found, target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range, math.degrees(avg_az_offset-az_offset), avg_target_range - actual_target_range, better )
 				else:
 					debug_pos_err = '---------------------------------------'
 	print 'rms_clc_r_err={0:10.7f} rms_avg_r_err={1:10.7f} rms_clc_a_err={2:10.7f} rms_avg_a_err={3:10.7f}'.format( math.sqrt(rms_clc_r_err/cnt), math.sqrt(rms_avg_r_err/cnt), math.degrees(math.sqrt(rms_clc_a_err/cnt)), math.degrees(math.sqrt(rms_avg_a_err/cnt)) )
