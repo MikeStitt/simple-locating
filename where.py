@@ -11,6 +11,7 @@ import scipy.linalg
 pi = math.pi
 
 debug_label = ''
+debug_pos_err = ''
 debug_found = ''
 
 def deg2rad( d ):
@@ -304,11 +305,11 @@ def estimate_pos_3_hrz_angles( left_target, right_target ):
 #              az       east (+)                                  south +
 	return (-(right_target.right_rad+ak-pi), target_locs[right_target.pos].right_inches+k,    d )
 
-def found( i ):
-	if i == -1 :
-		return '-----'
+def found( fnd, target ):
+	if fnd == -1 :
+		return '--'
 	else:
-		return 'FOUND'
+		return target_name[target]
 
 def where( rectangles ):
 	global debug_found
@@ -331,22 +332,28 @@ def where( rectangles ):
 	tp = -1
 	mu = -1
 	unknown = 0
+	qty_found = 0
 
 	for index,r in enumerate(rectangles):
 		if r.pos == LOW:
+			qty_found=qty_found+1
 			bt = index
 		elif r.pos == MID_UNKNOWN:
+			qty_found=qty_found+1
 			mu = index
 		elif r.pos == MID_LEFT:
+			qty_found=qty_found+1
 			ml = index
 		elif r.pos == MID_RIGHT:
+			qty_found=qty_found+1
 			mr = index
 		elif r.pos == TOP:
+			qty_found=qty_found+1
 			tp = index
 		else:
 			unknown = index # should not get here
 
-	debug_found = 'ml:{0:s} bt={1:s} tp={2:s} mr={3:s} mu={4:s}'.format( found(ml), found(bt), found(tp), found(mr), found(mu) )
+	debug_found = '{0:1d}:{1:s}{2:s}{3:s}{4:s}{5:s}'.format( qty_found, found(ml,MID_LEFT), found(bt,LOW), found(tp,TOP), found(mr,MID_RIGHT), found(mu,MID_UNKNOWN) )
 
 	left = -1
 	right = -1
@@ -393,15 +400,21 @@ def target_backboard_az_and_az_offset( target, east, south ):
 
 	return backboard_center_az, az_offset
 
+def target_range( target, east, south ):
+	target_east = target_locs[target.pos].center_east
+	target_south = -15.0
+
+	return math.sqrt( math.pow(target_east-east,2) + math.pow(target_south-south,2) )
 
 def test_cases():
 	global debug_label
+	global debug_pos_err
 #	for az in range (-30,+30):
 	for south in range (60, 121, 6):
 		for x in range (-50, +51, 10):
 			for az in range (-20,+21,1):
 				east = x
-				debug_label = 'az={0:6.1f} east={1:6.1f} south={2:6.1f}'.format(az, east, south) 
+				debug_label = 'az={0:6.1f} e={1:6.1f} s={2:6.1f}'.format(az, east, south) 
 #				print debug_label
 #                             Rotate Right, Tilt Up, Shift Right, Shift Up, Shift Forward
 				constructed_rectangles = construct_test_image( math.radians(float(az)), 0.0, float(east), 54.0, float(-south)  )
@@ -411,11 +424,15 @@ def test_cases():
 				calc_az, calc_east, calc_south = where( targets )
 
 				if calc_south != -1000 :
-					print '{0:s} {1:s} az-err={2:6.1f} east-err={3:6.1f} south-err={4:6.1f}'.format(debug_label, debug_found, az-math.degrees(calc_az), calc_east-east, calc_south - south )
+					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f}'.format(az-math.degrees(calc_az), calc_east-east, calc_south - south )
 					for r in targets:
 						actual_target_az, az_offset    = target_backboard_az_and_az_offset( r, east, south )
 						calc_target_az, calc_az_offset = target_backboard_az_and_az_offset( r, calc_east, calc_south )
-						print '{0:s} {1:s} az-err={2:6.1f}'.format(debug_label, target_name[r.pos], math.degrees(calc_az_offset-az_offset) )
+						actual_target_range = target_range( r, east, south)
+						calc_target_range = target_range( r, calc_east, calc_south )
+						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(debug_label, debug_pos_err, debug_found, target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range )
+				else:
+					debug_pos_err = '---------------------------------------'
 
 
 test_cases()
