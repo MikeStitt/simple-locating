@@ -101,8 +101,6 @@ def test_cases():
 	global debug_label
 	global debug_pos_err
 
-	rms_avg_a_err = 0.0
-	rms_avg_r_err = 0.0
 	rms_clc_a_err = 0.0
 	rms_clc_r_err = 0.0
 	cnt = 0
@@ -120,31 +118,24 @@ def test_cases():
 					targets.append( where.target( r[0], r[1], r[2], r[3] ) )
 				calc_az, calc_east, calc_south = where.where( targets )
 
-				avg_az, avg_east, avg_south = where.where( targets )
-
 				if calc_south != -1000 :
-					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f} az-avg={3:6.1f} e-avg={4:6.1f} s-avg={5:6.1f}'.format(az-math.degrees(calc_az), calc_east-east, calc_south - south, az-math.degrees(avg_az), avg_east-east, avg_south-south )
+					debug_pos_err = 'az-err={0:6.1f} e-err={1:6.1f} s-err={2:6.1f}'.format(
+						az-math.degrees(calc_az), calc_east-east, calc_south - south)
 					for r in targets:
                                            if r.pos == t :
 						actual_target_az, az_offset    = where.target_backboard_az_and_az_offset( r, east, south )
 						calc_target_az, calc_az_offset = where.target_backboard_az_and_az_offset( r, calc_east, calc_south )
-						avg_target_az, avg_az_offset   = where.target_backboard_az_and_az_offset( r, avg_east, avg_south )
 						actual_target_range            = where.target_range( r, east, south)
 						calc_target_range              = where.target_range( r, calc_east, calc_south )
-						avg_target_range               = where.target_range( r, avg_east, avg_south )
 						cnt = cnt + 1
 						rms_clc_a_err = rms_clc_a_err + math.pow( calc_az_offset-az_offset,2 )
 						rms_clc_r_err = rms_clc_a_err + math.pow( calc_target_range-actual_target_range,2 )
-						rms_avg_a_err = rms_clc_a_err + math.pow( avg_az_offset-az_offset,2 )
-						rms_avg_r_err = rms_clc_a_err + math.pow( avg_target_range-actual_target_range,2 )
 
-						if math.fabs(calc_target_range-actual_target_range) >= math.fabs(avg_target_range-actual_target_range):
-							better = '+'
-						else:
-							better = '.'
-						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f} az-avg-err={6:6.1f} r-avg-err={7:6.1f} {8:1s}'.format(debug_label, debug_pos_err, where.debug_found, target_name[r.pos], math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range, math.degrees(avg_az_offset-az_offset), avg_target_range - actual_target_range, better )
+						print '{0:s} {1:s} {2:s} {3:s} az-err={4:6.1f} r-err={5:6.1f}'.format(
+							debug_label, debug_pos_err, where.debug_found, target_name[r.pos], 
+							math.degrees(calc_az_offset-az_offset), calc_target_range - actual_target_range)
 				else:
 					debug_pos_err = '---------------------------------------'
-	print 'rms_clc_r_err={0:10.7f} rms_avg_r_err={1:10.7f} rms_clc_a_err={2:10.7f} rms_avg_a_err={3:10.7f}'.format( math.sqrt(rms_clc_r_err/cnt), math.sqrt(rms_avg_r_err/cnt), math.degrees(math.sqrt(rms_clc_a_err/cnt)), math.degrees(math.sqrt(rms_avg_a_err/cnt)) )
+	print 'rms_clc_r_err={0:10.7f} rms_clc_a_err={1:10.7f}'.format( math.sqrt(rms_clc_r_err/cnt), math.degrees(math.sqrt(rms_clc_a_err/cnt)) ) 
 
 test_cases()
