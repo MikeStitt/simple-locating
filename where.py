@@ -303,8 +303,6 @@ def where( rectangles ):
 	bt = '--'
 	tp = '--'
 	mu = '--'
-	leftmost = MID_RIGHT+1
-	rightmost = MID_LEFT-1
 
 	for r in rectangles:
 		if r.pos == LOW:
@@ -320,10 +318,11 @@ def where( rectangles ):
 
 	debug_found = '{0:s}{1:s}{2:s}{3:s}{4:s}'.format( ml, bt, tp, mr, mu )
 
-
 # Step 9
-# Identify the left most and right most target.
+# Identify the left most and right most targets.
 
+	leftmost = MID_RIGHT+1
+	rightmost = MID_LEFT-1
 	for r in rectangles:
 		if r.pos < leftmost :
 			leftmost = r.pos
