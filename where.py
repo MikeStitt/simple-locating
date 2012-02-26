@@ -213,7 +213,7 @@ class target:
 # Step 6:
 # Classify the target as a low, middle or top target based upon it's height above ground.
 #
-		if ( self.height_est_1 < 56.0 ):
+		if ( self.height_est_1 < 55.5 ):
 			self.level = LOW
 		elif ( self.height_est_1 < 90.5 ):
 			self.level = MID_UNKNOWN
