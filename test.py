@@ -115,14 +115,16 @@ def test_cases():
                                 #
 				# Project the image on to the camera, identify the complete targets in the field of view
                                 #
-				constructed_rectangles = construct_test_image( math.radians(float(az)), # Rotate Right - (Azimuth)   - radians 
-									       0.0,                     # Tilt Up      - (Elevation) - radians
-									       float(east),             # Shift Right  - (East)      - inches
-									       54.0,                    # Shift Up     - (Up)        - inches
-									       float(-south)  )         # Shift Forward- (North)     - inches
+				constructed_rectangles = construct_test_image( 
+                                    math.radians(float(az)), # Rotate Right - (Azimuth)   - radians 
+                                    0.0,                     # Tilt Up      - (Elevation) - radians
+				    float(east),             # Shift Right  - (East)      - inches
+				    54.0,                    # Shift Up     - (Up)        - inches
+                                    float(-south)  )         # Shift Forward- (North)     - inches
+                                #
 				# Start with an empty list of targets
 				targets = []			
-				#
+ 				#
 				# Perform Step 1 on all the target rectangles in the field of view
 				#
 				for r in constructed_rectangles:
