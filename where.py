@@ -243,7 +243,7 @@ class target:
 			elif self.azimuth_rad == max_az:
 				self.pos = MID_RIGHT
 			else:
-				self.pos = MID_UNKOWN  # should not reach this line, becaue if we
+				self.pos = MID_UNKNOWN # should not reach this line, becaue if we
 				                       # found a mid and another target, the mid
 				                       # should be min_az or max_az
 		else:
