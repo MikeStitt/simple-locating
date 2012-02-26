@@ -128,7 +128,8 @@ def test_cases():
 				# Perform Step 1 on all the target rectangles in the field of view
 				#
 				for r in constructed_rectangles:
-					targets.append( where.target( r[0], r[1], r[2], r[3] ) )
+                                        #       edges:               left, right,  top, bottom     : in pixels
+					targets.append( where.target( r[0], r[1], r[2],   r[3] ) )
 
 				# Perform Steps 2 through 12 on the target set of rectangles in the field of view
 				#

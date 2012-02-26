@@ -200,22 +200,7 @@ class target:
 # Initial estimate of the distance to this target based upon the vertical degrees this target takes in the 
 # field of view.
 # 
-#                         c
-#  top 1
-#      |\
-#      | \
-#      |  2 bottom
-#      |/  
-#      3 ^ 
-#        pitch_error
-#
-#     angle 123 is 90 deg
-#     seg 13 is target height, and plumb
-#     seg 12 is apparent target parallel to image plane
-#     point 2 is apparent position of bottom in image plane
-#     seg12 = apparent_height = target_height * cos( camera_pitch_error )
-#
-		self.dist_est_1 = target_height * math.cos( camera_pitch_error ) / ( math.tan(self.top_rad) - math.tan(self.bottom_rad) )
+		self.dist_est_1 = target_height / ( math.tan(self.top_rad+camera_pitch_error)-math.tan(self.bottom_rad+camera_pitch_error) )
 
 #
 # Step 5:
