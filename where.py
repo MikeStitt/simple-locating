@@ -110,7 +110,7 @@ MID_HOOP_UP = 61.0   # inches
 TOP_HOOP_UP = 98.0   # inches
 
 #
-# Center of middel hoop
+# Center of middle hoop
 #
 MID_LEFT_HOOP_EAST  = -27.38  # inches
 MID_RIGHT_HOOP_EAST = +27.38  # inches
@@ -125,32 +125,37 @@ TARGET_BOTTOM_DELTA =  +2.0 #inches
 
 #define a dictionary look up table for the targe locations
 
-target_locs = { LOW:         target_position( 0.0+TARGET_LEFT_DELTA,
-				              0.0+TARGET_RIGHT_DELTA,
-				              LOW_HOOP_UP+TARGET_TOP_DELTA,
-				              LOW_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              LOW_HOOP_UP),
+target_locs = { LOW:         target_position( 0.0+TARGET_LEFT_DELTA,                  # l = left edge  
+				              0.0+TARGET_RIGHT_DELTA,                 # r = right edge 
+				              LOW_HOOP_UP+TARGET_TOP_DELTA,           # t = top edge   
+				              LOW_HOOP_UP+TARGET_BOTTOM_DELTA,        # b = bottom edge
+				              LOW_HOOP_UP),                           # h = hoop height
+
 		# Default an unknown middle level hoop to be the left hoop
-		MID_UNKNOWN: target_position( MID_LEFT_HOOP_EAST+TARGET_LEFT_DELTA,      
-				              MID_LEFT_HOOP_EAST+TARGET_RIGHT_DELTA,
-				              MID_HOOP_UP+TARGET_TOP_DELTA,
-				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              MID_HOOP_UP),
-		MID_LEFT:    target_position( MID_LEFT_HOOP_EAST+TARGET_LEFT_DELTA,      
-				              MID_LEFT_HOOP_EAST+TARGET_RIGHT_DELTA,
-				              MID_HOOP_UP+TARGET_TOP_DELTA,
-				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              MID_HOOP_UP),
-		MID_RIGHT:   target_position( MID_RIGHT_HOOP_EAST+TARGET_LEFT_DELTA,      
-				              MID_RIGHT_HOOP_EAST+TARGET_RIGHT_DELTA,
-				              MID_HOOP_UP+TARGET_TOP_DELTA,
-				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              MID_HOOP_UP),
-		TOP:         target_position( 0.0+TARGET_LEFT_DELTA,
-				              0.0+TARGET_RIGHT_DELTA,
-				              TOP_HOOP_UP+TARGET_TOP_DELTA,
-				              TOP_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              TOP_HOOP_UP) }
+		MID_UNKNOWN: target_position( MID_LEFT_HOOP_EAST+TARGET_LEFT_DELTA,   # l = left edge     
+				              MID_LEFT_HOOP_EAST+TARGET_RIGHT_DELTA,  # r = right edge 
+				              MID_HOOP_UP+TARGET_TOP_DELTA,	      # t = top edge   
+				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,	      # b = bottom edge
+				              MID_HOOP_UP),			      # h = hoop height
+
+		MID_LEFT:    target_position( MID_LEFT_HOOP_EAST+TARGET_LEFT_DELTA,   # l = left edge     
+				              MID_LEFT_HOOP_EAST+TARGET_RIGHT_DELTA,  # r = right edge 
+				              MID_HOOP_UP+TARGET_TOP_DELTA,	      # t = top edge   
+				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,	      # b = bottom edge
+				              MID_HOOP_UP),			      # h = hoop height
+
+		MID_RIGHT:   target_position( MID_RIGHT_HOOP_EAST+TARGET_LEFT_DELTA,  # l = left edge      
+				              MID_RIGHT_HOOP_EAST+TARGET_RIGHT_DELTA, # r = right edge 
+				              MID_HOOP_UP+TARGET_TOP_DELTA,	      # t = top edge   
+				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,	      # b = bottom edge
+				              MID_HOOP_UP),			      # h = hoop height
+
+		TOP:         target_position( 0.0+TARGET_LEFT_DELTA,                  # l = left edge  
+				              0.0+TARGET_RIGHT_DELTA,		      # r = right edge 
+				              TOP_HOOP_UP+TARGET_TOP_DELTA,	      # t = top edge   
+				              TOP_HOOP_UP+TARGET_BOTTOM_DELTA,	      # b = bottom edge
+				              TOP_HOOP_UP) }			      # h = hoop height
+
 # state variables
 
 camera_pitch_error = camera_initial_pitch_error
