@@ -111,12 +111,15 @@ def test_cases():
 				az = math.degrees(math.atan2( where.target_locs[t].center_east-east, south+15.0 ))
 				debug_label = 'az={0:6.1f}(deg) e={1:6.1f}(in) s={2:6.1f}(in)'.format(az, east, south) 
 				#
+                                # Step 0g
+                                #
 				# Project the image on to the camera, identify the complete targets in the field of view
-				constructed_rectangles = construct_test_image( math.radians(float(az)), # Rotate Right
-									       0.0,                     # Tilt Up, 
-									       float(east),             # Shift Right, 
-									       54.0,                    # Shift Up, 
-									       float(-south)  )         # Shift Forward 
+                                #
+				constructed_rectangles = construct_test_image( math.radians(float(az)), # Rotate Right - (Azimuth)   - radians 
+									       0.0,                     # Tilt Up      - (Elevation) - radians
+									       float(east),             # Shift Right  - (East)      - inches
+									       54.0,                    # Shift Up     - (Up)        - inches
+									       float(-south)  )         # Shift Forward- (North)     - inches
 				# Start with an empty list of targets
 				targets = []			
 				#

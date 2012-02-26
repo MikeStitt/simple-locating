@@ -18,6 +18,8 @@ debug_found = ''
 def deg2rad( d ):
 	return 2.0 * pi * d / 360.0
 
+# Step 0e
+# Camera Field of View equations
 #
 # Camera x (width) Field of View
 #
@@ -43,6 +45,9 @@ camera_y_pixels = 240.0                         # pixels
 #
 camera_focal_len = camera_x_pixels / ( 2.0 * math.tan( camera_x_fov_rad / 2.0 ))   # pixels
 
+# Step 0f
+# Use pixel location and camera focal length to turn the camera into
+# a angle measuring device.
 #
 # Use the 1/2 angle form of angle = 2 atan( d/(2f))
 #  angle = atan( d/f )
