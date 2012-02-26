@@ -74,6 +74,8 @@ MID_UNKNOWN = 3
 TOP = 4
 MID_RIGHT = 5
 
+# Step 0d
+#
 # define a class to hold a table of where the targets are on the field
 #
 # Definition of field coordinate system.
@@ -90,15 +92,14 @@ MID_RIGHT = 5
 #
 
 class target_position:
-	def __init__(self,l,r,t,b,h,s):
-		self.left_inches = l
-		self.right_inches = r
-		self.top_inches = t
-		self.bottom_inches = b
-		self.hoop_height = h
-		self.center_east = (l+r)/2.0
-		self.center_up = (t+b)/2.0
-		self.south = s
+	def __init__(self,l,r,t,b,h):
+		self.left_inches = l             # east coordinate of left edge
+		self.right_inches = r            # east coordinate of right edge
+		self.top_inches = t              # up coordinate of top edge
+		self.bottom_inches = b           # up coordinate of bottom edge
+		self.hoop_height = h             # up coordinate of hoop
+		self.center_east = (l+r)/2.0     # east coordinate center
+		self.center_up = (t+b)/2.0       # up coordinate
 
 #
 # Height of hoop above ground
@@ -128,33 +129,28 @@ target_locs = { LOW:         target_position( 0.0+TARGET_LEFT_DELTA,
 				              0.0+TARGET_RIGHT_DELTA,
 				              LOW_HOOP_UP+TARGET_TOP_DELTA,
 				              LOW_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              LOW_HOOP_UP,
-				              0.0),
+				              LOW_HOOP_UP),
 		# Default an unknown middle level hoop to be the left hoop
 		MID_UNKNOWN: target_position( MID_LEFT_HOOP_EAST+TARGET_LEFT_DELTA,      
 				              MID_LEFT_HOOP_EAST+TARGET_RIGHT_DELTA,
 				              MID_HOOP_UP+TARGET_TOP_DELTA,
 				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              MID_HOOP_UP,
-				              0.0 ),
+				              MID_HOOP_UP),
 		MID_LEFT:    target_position( MID_LEFT_HOOP_EAST+TARGET_LEFT_DELTA,      
 				              MID_LEFT_HOOP_EAST+TARGET_RIGHT_DELTA,
 				              MID_HOOP_UP+TARGET_TOP_DELTA,
 				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              MID_HOOP_UP,
-				              0.0 ),
+				              MID_HOOP_UP),
 		MID_RIGHT:   target_position( MID_RIGHT_HOOP_EAST+TARGET_LEFT_DELTA,      
 				              MID_RIGHT_HOOP_EAST+TARGET_RIGHT_DELTA,
 				              MID_HOOP_UP+TARGET_TOP_DELTA,
 				              MID_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              MID_HOOP_UP,
-				              0.0 ),
+				              MID_HOOP_UP),
 		TOP:         target_position( 0.0+TARGET_LEFT_DELTA,
 				              0.0+TARGET_RIGHT_DELTA,
 				              TOP_HOOP_UP+TARGET_TOP_DELTA,
 				              TOP_HOOP_UP+TARGET_BOTTOM_DELTA,
-				              TOP_HOOP_UP,
-				              0.0 ) }
+				              TOP_HOOP_UP) }
 # state variables
 
 camera_pitch_error = camera_initial_pitch_error
