@@ -260,7 +260,6 @@ def estimate_pos_3_sep_hrz_angles( left_rad, mid_rad, right_rad, left_pos, mid_p
 	ak = pi/2-A
 	alpha_k = pi/2-ak
 	alpha_1 = pi/2-ak-a1
-	alpha_2 = pi/2-ak-a1-a0
 
 	k = b1 * math.tan(alpha_1) / (math.tan(alpha_k)-math.tan(alpha_1))
 
