@@ -12,6 +12,16 @@ pi = math.pi
 
 debug_found = ''
 
+leftmost = 0
+rightmost = 0
+az1 = 0.
+east1 = 0.
+south1 = 0.
+az2 = 0.
+east2 = 0.
+south2 = 0.
+
+
 #
 # Convert from degrees to radians
 #
@@ -274,6 +284,7 @@ def estimate_pos_3_sep_hrz_angles( left_rad, mid_rad, right_rad, left_pos, mid_p
 #
 def where( rectangles ):
 	global debug_found
+	global leftmost, rightmost, az1, east1, south1, az2, east2, south2
 
 # Invoke steps 2 through 6 for each target found
 #
